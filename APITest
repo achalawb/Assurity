@@ -1,0 +1,74 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Formatting;
+using System.Net;
+using System.IO;
+
+namespace TestExam
+{
+
+    public class DataObject
+    {
+        public string Name { get; set; }
+        public int CategoryId { get; set; }
+        public string Path { get; set; }
+        public bool CanRelist { get; set; }
+        public string LegalNotice { get; set; }
+        public List <Promotions> Promotions { get; set; }
+
+    }
+
+    public class Promotions
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int ID { get; set; }
+    }
+    class Program
+    {
+        private const string URL = "https://api.tmsandbox.co.nz/v1/Categories/6327/Details.json";
+        static void Main(string[] args)
+        {
+            
+            RunAsync().Wait();
+            Console.ReadLine();
+        }
+
+        static async Task RunAsync()
+        {
+            using (var client = new HttpClient())
+            {
+                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls | System.Net.SecurityProtocolType.Tls11 | System.Net.SecurityProtocolType.Tls12;
+                client.BaseAddress = new Uri("https://api.tmsandbox.co.nz/v1/Categories/6327/Details.json");
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+                HttpResponseMessage responce = await client.GetAsync("?catalogue=false");//GetAsync("?catalogue=false");
+                if (responce.IsSuccessStatusCode)
+                {
+                    var records = await responce.Content.ReadAsAsync<DataObject>();
+                    if (records.Name == "Carbon credits" && records.CanRelist == true)
+                    {
+                        List<Promotions> promolist = records.Promotions;
+                        foreach (var promoitem in promolist)
+                        {
+                            if (promoitem.Name == "Gallery" && promoitem.Description.Contains("2x larger image"))
+                            {
+                                Console.WriteLine("patten maching for promoitem id" + promoitem.ID + " Name : " + promoitem.Name + " Description " + promoitem.Description);
+                            }
+                        }
+                    }
+                }
+                
+            }
+        }
+        
+    }
+
+    
+}
